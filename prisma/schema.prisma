@@ -1,0 +1,103 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL")
+}
+
+enum ctype {
+    PRIMARY1
+    PRIMARY2
+    SECONDARY1
+    SECONDARY2
+}
+
+enum mtype {
+    MATHSCI
+    ARTMATH
+    ARTENG
+    ARTSOC //ศิลป์-สังคม
+    ARTFREE // ศิลป์-ทั่วไป
+}
+
+enum statustype {
+    W8
+    AGREE
+    REJECT
+}
+
+model Class {
+    class_id   Int          @id @default(autoincrement())
+    class_type ctype
+    enrollment enrollment[]
+    student    student[]
+
+    @@map("class")
+}
+
+model major {
+    major_id   Int       @id @default(autoincrement())
+    major_type mtype
+    student    student[]
+}
+
+model student {
+    std_id              Int          @id @default(autoincrement())
+    std_name            String
+    std_lastname        String
+    std_bd              DateTime     @db.Date
+    std_address         String
+    std_phone           String
+    std_email           String?
+    std_img             String
+    std_identity        Int?
+    std_parent_identity Int
+    std_parent_name     String
+    std_parent_lastname String
+    std_parent_phone    String?
+    std_parent_status   String
+    std_parent_address  String?
+    enrollment          enrollment[]
+    class               Class        @relation(fields: [classId], references: [class_id], onDelete: Cascade, onUpdate: Cascade)
+    classId             Int          @map("class_id")
+    major               major        @relation(fields: [majorId], references: [major_id], onDelete: Cascade, onUpdate: Cascade)
+    majorId             Int          @map("major_id")
+    history             history[]
+}
+
+model admin {
+    admin_id       Int      @id @default(autoincrement())
+    admin_name     String
+    admin_lastname String
+    admin_phone    String?
+    admin_address  String?
+    admin_email    String
+    admin_password String
+    status         status[]
+}
+
+model enrollment {
+    enmt_id  Int     @id @default(autoincrement())
+    std      student @relation(fields: [std_id], references: [std_id], onDelete: Cascade, onUpdate: Cascade)
+    std_id   Int
+    class    Class   @relation(fields: [class_id], references: [class_id], onDelete: Cascade, onUpdate: Cascade)
+    class_id Int
+}
+
+model history {
+    hist_id Int      @id @default(autoincrement())
+    std     student  @relation(fields: [std_id], references: [std_id], onDelete: Cascade, onUpdate: Cascade)
+    std_id  Int
+    status  status[]
+}
+
+model status {
+    status_id   Int        @id @default(autoincrement())
+    status_type statustype @default(W8)
+    hist        history    @relation(fields: [hist_id], references: [hist_id], onDelete: Cascade, onUpdate: Cascade)
+    hist_id     Int
+    admin       admin      @relation(fields: [admin_id], references: [admin_id], onDelete: Cascade, onUpdate: Cascade)
+    admin_id    Int
+}
